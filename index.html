@@ -50,12 +50,27 @@
 
     <div class="page" data-page="LOBBY">
         <h2>Lobby: <span class="lobby-name"></span></h2>
-        <button id="start-game-button">Start Game</button>
+        <div class="lobby-list-of-players"></div>
+        <button id="start-game-button" class="start-game-button">Start Game</button>
     </div>
 
     <div class="page" data-page="GAME">
-        <div class="players-list"></div>
-        <canvas id="canvas"></canvas>
+        <div class="game-player"><span class="game-player-text"></span> <div class="game-player-color"></div></div>
+        <div class="rivals-announce">You are playing against:</div>
+        <div class="rivals-list"></div>
+
+        <div class="canvas-container">
+            <div class="win-screen">
+                YOU WON!
+            </div>
+            <div class="lose-screen">
+                <div class="lose-screen-title">YOU LOST</div>
+                <div class="lose-screen-winner"></div>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+
+
     </div>
 </div>
 

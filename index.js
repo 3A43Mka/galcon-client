@@ -85,6 +85,87 @@ function renderListOfGames() {
     oldLobbyList.parentNode.replaceChild(newLobbyList, oldLobbyList);
 }
 
+function renderLobby() {
+    const lobbyNameEl = document.querySelector(".lobby-name");
+    lobbyNameEl.innerText = store.currentGameId;
+    const oldListOfLobbyPlayers = document.querySelector(".lobby-list-of-players");
+    const newListOfLobbyPlayers = oldListOfLobbyPlayers.cloneNode(false);
+    let counter = 1;
+    for (let player of store.currentLobbyPlayers) {
+        const playerItem = document.createElement("div");
+        playerItem.className = "lobby-list-player-item";
+        const playerItemColor = document.createElement("div");
+        playerItemColor.className = "lobby-list-player-item-color";
+        playerItemColor.style.setProperty("background-color", player.color);
+        const playerItemText = document.createElement("span");
+        playerItemText.className = "lobby-list-player-item-text";
+        playerItemText.innerText = `${counter}. ${player.name}${player.isHost ? " (Host)": ""}`;
+        playerItem.appendChild(playerItemText);
+        playerItem.appendChild(playerItemColor);
+        newListOfLobbyPlayers.appendChild(playerItem);
+        counter++;
+    }
+    oldListOfLobbyPlayers.parentNode.replaceChild(newListOfLobbyPlayers, oldListOfLobbyPlayers);
+    // start button update
+    const startGameButton = document.querySelector(".start-game-button");
+    if (store.currentLobbyPlayers.length < 2) {
+        startGameButton.classList.remove("start-game-button--active");
+    } else {
+        startGameButton.classList.add("start-game-button--active");
+    }
+}
+
+function renderGameScreen() {
+    const playerText = document.querySelector(".game-player-text");
+    playerText.innerText = store.lastUserCreated.name;
+    const playerColor = document.querySelector(".game-player-color");
+    playerColor.style.setProperty("background-color", store.lastUserCreated.color);
+
+    const oldRivalsList = document.querySelector(".rivals-list");
+    const newRivalsList = oldRivalsList.cloneNode(false);
+    for (let rival of store.currentLobbyPlayers) {
+        if (rival.id === store.playerId) {
+            continue;
+        }
+        const rivalItem = document.createElement("div");
+        rivalItem.className = "rival-item";
+        const rivalColor = document.createElement("div");
+        rivalColor.className = "rival-item-color";
+        rivalColor.style.setProperty("background-color", rival.color);
+        const rivalName = document.createElement("div");
+        rivalName.className = "rival-item-name";
+        rivalName.innerText = rival.name;
+        rivalItem.appendChild(rivalColor);
+        rivalItem.appendChild(rivalName);
+        newRivalsList.appendChild(rivalItem)
+    }
+    oldRivalsList.parentNode.replaceChild(newRivalsList, oldRivalsList);
+}
+
+function renderGameEnded() {
+    const winScreen = document.querySelector(".win-screen");
+    const loseScreen = document.querySelector(".lose-screen");
+    if (!store.lastGameWinner) {
+        const winScreen = document.querySelector(".win-screen");
+        winScreen.classList.add("d-none");
+        const loseScreen = document.querySelector(".lose-screen");
+        loseScreen.classList.add("d-none");
+        return;
+    }
+    if (store.lastGameWinner.id === store.playerId) {
+        loseScreen.classList.add("d-none");
+        winScreen.classList.remove("d-none");
+
+    } else {
+        loseScreen.classList.remove("d-none");
+        winScreen.classList.add("d-none");
+        const winnerEl = document.querySelector(".lose-screen-winner");
+        winnerEl.innerText = `Winnner is ${store.lastGameWinner.name}`;
+    }
+
+
+}
+
 function renderPlayerGreeting() {
     const playerName = document.querySelector(".player-greeting-name")
     playerName.innerText = store.lastUserCreated.name;
@@ -100,8 +181,6 @@ const PAGES = {
     LOBBY: 'LOBBY',
     GAME: 'GAME',
 }
-
-
 
 //// canvas game stuff:
 
@@ -280,6 +359,8 @@ const store = {
     allGames: [],
     currentGameId: null,
     currentLobby: null,
+    currentLobbyPlayers: [],
+    lastGameWinner: null,
 };
 
 store.lastGameState = null;
@@ -298,14 +379,18 @@ socket.on('GAME_CREATED', () => {
     getLobbyList();
 })
 
-socket.on('PLAYER_JOINED', (playerId) => {
-    console.log("Player joined: ", playerId);
+socket.on('PLAYER_JOINED', (player) => {
+    console.log("Player joined: ", player);
+    store.currentLobbyPlayers.push(player);
+    renderLobby();
 });
 
 socket.on('GAME_STARTED', (gameDetails) => {
     console.log("Game Started: ", gameDetails);
     store.lastGameState = gameDetails;
     store.currentPage = PAGES.GAME;
+    renderGameScreen();
+    renderGameEnded();
     updateNavigation();
     canvas.width = store.lastGameState.map.w;
     canvas.height = store.lastGameState.map.h;
@@ -318,6 +403,8 @@ socket.on('SEND_UNITS', (sendUnitsDetails) => {
 
 socket.on('GAME_END', (winner, allPlayers) => {
     console.log("The game ended, winner: ", winner, "allPlayers: ", allPlayers);
+    store.lastGameWinner = winner;
+    renderGameEnded();
 });
 
 socket.on('SYNC', (gameState) => {
@@ -345,8 +432,9 @@ function createNewGame() {
         socket.emit('GET_LOBBY_LIST', (lobbyList) => {
             store.allGames = lobbyList;
             store.currentLobby = store.allGames.find(g => g.id === store.currentGameId)
-
+            store.currentLobbyPlayers = [{id: socket.id, name: store.lastUserCreated.name, isHost: true, color: store.lastUserCreated.color}];
             store.currentPage = PAGES.LOBBY;
+            renderLobby();
             updateNavigation();
         });
     });
@@ -361,14 +449,18 @@ function joinGame(gameId) {
         console.log("I have just joined a game: ", game);
         store.currentGameId = gameId;
         store.currentLobby = game;
+        store.currentLobbyPlayers = game.players;
         store.currentPage = PAGES.LOBBY;
+        renderLobby();
         updateNavigation();
     });
 }
 
 function startGame(gameId) {
-    socket.emit('START_GAME', gameId);
-    console.log("I am initiating a start of the game: ", gameId);
+    if (store.currentLobbyPlayers.length > 1) {
+        socket.emit('START_GAME', gameId);
+        console.log("I am initiating a start of the game: ", gameId);
+    }
 }
 
 function sendUnits(gameId, sourcePlanetId, destinationPlanetId) {

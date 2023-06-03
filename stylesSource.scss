@@ -93,25 +93,222 @@
       display: block;
     }
   }
-}
 
+  &[data-page="MAIN_MENU"] {
+    .player-greeting {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-.player-greeting {
-  width: 100%;
-  display: flex;
-  align-items: center;
+      &-text {
+        margin-right: 10px;
+      }
 
-  &-text {
-    margin-right: 10px;
+      &-color {
+        width: 60px;
+        height: 30px;
+        border: 1px solid black;
+      }
+    }
+
+    h2 {
+      text-align: center;
+      width: 100%;
+      padding: 10px 0;
+      margin: 20px 0;
+      background: linear-gradient(90deg, transparent, black, transparent);
+      color: white;
+    }
+
+    .lobby-list {
+      display: flex;
+      flex-direction: column;
+      width: 45%;
+      margin: 0 auto;
+    }
+
+    .lobby-item {
+      margin-bottom: 7px;
+      cursor: pointer;
+      transition: all ease-in-out 0.1s;
+
+      &:hover {
+        transform: translateX(5px);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 0, 0.43), transparent);
+      }
+    }
+
+    .main-menu-buttons-block {
+      display: flex;
+      justify-content: center;
+
+      button {
+        margin: 10px 0;
+        padding: 5px 15px;
+        color: white;
+        font-size: 20px;
+        background-color: blue;
+        border: 1px solid black;
+        cursor: pointer;
+        display: block;
+        width: 180px;
+
+        &:not(:last-child) {
+          margin-right: 20px;
+        }
+
+      }
+    }
   }
 
-  &-color {
-    width: 60px;
-    height: 30px;
-    border: 1px solid black;
+  &[data-page="LOBBY"] {
+    h2 {
+      width: 100%;
+      margin: 10px 0;
+
+      .lobby-name {
+        font-weight: normal;
+      }
+    }
+
+    .lobby-list-of-players {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+
+      .lobby-list-player-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 5px;
+
+        &-color {
+          width: 30px;
+          height: 15px;
+          border: 1px solid black;
+          margin: 0 5px;
+        }
+
+        &-text {
+
+        }
+      }
+    }
+
+    .start-game-button {
+      margin: 10px auto;
+      padding: 5px 15px;
+      color: black;
+      font-size: 30px;
+      background-color: gray;
+      border: 1px solid black;
+      cursor: not-allowed;
+      display: block;
+
+      &--active {
+        background-color: blue;
+        color: white;
+        cursor: pointer;
+      }
+    }
   }
+
+  &[data-page="GAME"] {
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .canvas-container {
+      display: block;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .win-screen,
+    .lose-screen {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      font-size: 30px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(90deg, transparent, black, transparent);
+    }
+
+    .win-screen {
+      color: #213ae3;
+    }
+
+    .lose-screen {
+      color: #d32020;
+
+      &-winner {
+        font-size: 20px;
+        text-align: center;
+      }
+    }
+
+    .game-player {
+      display: flex;
+      font-size: 20px;
+      align-items: center;
+      justify-content: center;
+
+      &-text {
+        margin: 5px;
+      }
+
+      &-color {
+        width: 30px;
+        height: 20px;
+        border: 1px solid black;
+      }
+    }
+
+    .rivals-announce {
+      font-size: 18px;
+      width: 100%;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .rivals-list {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .rival-item {
+      display: flex;
+      align-items: center;
+      margin: 0 5px;
+
+      &-color {
+        width: 30px;
+        height: 20px;
+        border: 1px solid black;
+        margin-right: 5px;
+      }
+
+      &-name {
+
+      }
+    }
+  }
+
 }
 
 .d-none {
-  display: none;
+  display: none!important;
 }
