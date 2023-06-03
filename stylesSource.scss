@@ -1,0 +1,117 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-family: Arial;
+}
+
+.background {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  background-image: url("./images/bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+.container {
+  max-width: 1024px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: rgba(white, 0.8);
+  z-index: 1;
+}
+
+.heading {
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+}
+
+.page {
+  width: 100%;
+  padding: 20px;
+
+  &[data-page="REGISTER"] {
+    h2 {
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      font-size: 42px;
+    }
+
+    label {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      font-size: 30px;
+
+      input {
+        border: 1px solid darkgray;
+        font-size: 30px;
+        padding: 17px;
+        margin-left: 10px;
+        flex-grow: 1;
+      }
+    }
+
+    .colors-container {
+      display: flex;
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .color-option-item {
+      width: 60px;
+      height: 30px;
+      border: 1px solid black;
+      margin: 5px;
+      cursor: pointer;
+
+      &--selected {
+        outline: 2px solid lightgoldenrodyellow;
+      }
+    }
+
+    .input-error {
+      font-size: 24px;
+      color: red;
+      padding: 5px;
+    }
+
+    button {
+      padding: 5px 10px;
+      border: none;
+      background: darkblue;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      margin: 0 auto;
+      display: block;
+    }
+  }
+}
+
+
+.player-greeting {
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  &-text {
+    margin-right: 10px;
+  }
+
+  &-color {
+    width: 60px;
+    height: 30px;
+    border: 1px solid black;
+  }
+}
+
+.d-none {
+  display: none;
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="styles.css">
+    <title>Galcon</title>
+</head>
+<body>
+
+<div class="background"></div>
+
+<div class="container">
+    <h1 class="heading">GALCON</h1>
+
+    <div class="page" data-page="REGISTER">
+        <h2>Enter your nickname:</h2>
+        <label>
+            Nickname:
+            <input id="nickname-input">
+        </label>
+        <h2>Pick your color:</h2>
+        <div class="colors-container">
+
+        </div>
+
+        <div class="input-error"></div>
+
+        <button id="register-button">Next</button>
+
+    </div>
+
+    <div class="page" data-page="MAIN_MENU">
+        <div class="player-greeting">
+            <span class="player-greeting-text">Hi, <span class="player-greeting-name"></span>, your color is</span>
+            <div class="player-greeting-color"></div>
+
+        </div>
+        <h2>Lobbies:</h2>
+        <div class="lobby-list">
+
+        </div>
+        <div class="main-menu-buttons-block">
+            <button id="create-game-button">Create Game</button>
+            <button id="go-to-settings-button">Settings</button>
+        </div>
+    </div>
+
+    <div class="page" data-page="LOBBY">
+        <h2>Lobby: <span class="lobby-name"></span></h2>
+        <button id="start-game-button">Start Game</button>
+    </div>
+
+    <div class="page" data-page="GAME">
+        <div class="players-list"></div>
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+
+<div>
+</div>
+
+
+<script src="./socket.io.js"></script>
+<script src="index.js"></script>
+
+
+</body>
+</html>
