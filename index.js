@@ -1,4 +1,6 @@
 import colors from "./colors";
+import possibleColorOptions from "./possibleColorOptions";
+import PAGES from "./pages";
 
 const drawUtils = {
     drawBackground(color) {
@@ -26,7 +28,6 @@ const drawUtils = {
         ctx.fillText(msg, x, y);
     }
 }
-
 const utils = {
     oMousePos(canvas, evt) {
         var ClientRect = canvas.getBoundingClientRect();
@@ -43,17 +44,6 @@ const utils = {
     }
 
 }
-
-const possibleColorOptions = ['red', 'green', 'blue', 'cyan', 'brown', 'pink', 'yellow', ]
-
-const PAGES = {
-    REGISTER: 'REGISTER',
-    MAIN_MENU: 'MAIN_MENU',
-    SETTINGS: 'SETTINGS',
-    LOBBY: 'LOBBY',
-    GAME: 'GAME',
-}
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -356,6 +346,7 @@ socket.on('GAME_STARTED', (gameDetails) => {
     store.currentPage = PAGES.GAME;
     renderGameScreen();
     renderGameEnded();
+    animateCountDown();
     updateNavigation();
     canvas.width = store.lastGameState.map.w;
     canvas.height = store.lastGameState.map.h;
@@ -456,6 +447,41 @@ function addCanvasEventListeners() {
 function initiateReset() {
     localStorage.setItem("profileSaveData", JSON.stringify(store.lastUserCreated));
     location.reload();
+}
+
+function animateCountDown() {
+    const countdownScreen = document.querySelector(".countdown-screen");
+    const slide1 = document.querySelector(".countdown-slide-1");
+    const slide2 = document.querySelector(".countdown-slide-2");
+    const slide3 = document.querySelector(".countdown-slide-3");
+    const slide4 = document.querySelector(".countdown-slide-4");
+    document.querySelectorAll(".countdown-slide").forEach(slide => {
+        slide.classList.remove("countdown-slide--animated");
+        slide.classList.add("d-none");
+    })
+    countdownScreen.classList.remove("d-none");
+    slide1.classList.remove("d-none");
+    slide1.classList.add("countdown-slide--animated");
+    const delay = 700;
+    setTimeout(() => {
+        slide1.classList.add("d-none");
+        slide2.classList.remove("d-none");
+        slide2.classList.add("countdown-slide--animated");
+    }, delay);
+    setTimeout(() => {
+        slide2.classList.add("d-none");
+        slide3.classList.remove("d-none");
+        slide3.classList.add("countdown-slide--animated");
+    }, delay*2);
+    setTimeout(() => {
+        slide3.classList.add("d-none");
+        slide4.classList.remove("d-none");
+        slide4.classList.add("countdown-slide--animated");
+    }, delay*3);
+    setTimeout(() => {
+        slide4.classList.add("d-none");
+        countdownScreen.classList.add("d-none");
+    }, delay*4);
 }
 
 function tryLoadingProfileData() {
