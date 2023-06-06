@@ -36,6 +36,33 @@ function handleCreateGame() {
 
 }
 
+function handleGoToSettings() {
+    store.settingsForm.pickedColor = store.lastUserCreated.color;
+    store.settingsForm.error = '';
+    renderSettingsMenu();
+    renderSettingsError();
+    store.currentPage = PAGES.SETTINGS;
+    updateNavigation();
+}
+
+function handleGoBackToMain() {
+    store.currentPage = PAGES.MAIN_MENU;
+    updateNavigation();
+}
+
+function handleSaveSettings() {
+    const newName = document.querySelector("#settings-name");
+    if (newName.value.length < 1) {
+        store.settingsForm.error = 'New name is too short!';
+        renderSettingsError();
+        return;
+    }
+    createMyUser(newName.value, store.settingsForm.pickedColor);
+    renderPlayerGreeting();
+    store.currentPage = PAGES.MAIN_MENU;
+    updateNavigation();
+}
+
 function addPagesEventListeners() {
     const register = document.querySelector("#register-button");
     register.addEventListener("click", handleRegister);
@@ -45,6 +72,12 @@ function addPagesEventListeners() {
     strtgm.addEventListener("click", () => {
         startGame(store.currentGameId);
     });
+    const goToSettings = document.querySelector("#go-to-settings-button");
+    goToSettings.addEventListener("click", handleGoToSettings);
+    const settingsBack = document.querySelector("#settings-back");
+    settingsBack.addEventListener("click", handleGoBackToMain);
+    const settingsSave = document.querySelector("#settings-save");
+    settingsSave.addEventListener("click", handleSaveSettings);
 }
 
 function renderColorOptions() {
@@ -67,6 +100,34 @@ function renderColorOptions() {
     oldColorsContainer.parentNode.replaceChild(newColorsContainer, oldColorsContainer);
 }
 
+function renderSettingsMenu() {
+    const settingsNameInput = document.querySelector("#settings-name");
+    settingsNameInput.value = store.lastUserCreated.name;
+    renderColorPickerInSettings();
+}
+
+function renderColorPickerInSettings() {
+    const oldColorsContainer = document.querySelector(".settings-color-picker");
+    const newColorsContainer = oldColorsContainer.cloneNode(false);
+    for (let color of possibleColorOptions) {
+        const colorElement = document.createElement("div");
+        colorElement.className = `settings-color-option-item ${store.settingsForm.pickedColor === color ? "settings-color-option-item--selected": ""}`;
+        colorElement.setAttribute("data-color", color);
+        colorElement.style.setProperty("background-color", color);
+        colorElement.addEventListener("click", () => {
+            store.settingsForm.pickedColor = color;
+            renderColorPickerInSettings();
+        });
+        newColorsContainer.appendChild(colorElement);
+    }
+    oldColorsContainer.parentNode.replaceChild(newColorsContainer, oldColorsContainer);
+}
+
+function renderSettingsError() {
+    const errorEl = document.querySelector(".settings-error");
+    errorEl.innerText = store.settingsForm.error;
+}
+
 function renderListOfGames() {
     const oldLobbyList = document.querySelector(".lobby-list");
     const newLobbyList = document.createElement("div");
@@ -80,6 +141,13 @@ function renderListOfGames() {
            joinGame(game.id);
         });
         newLobbyList.appendChild(gameItem);
+    }
+
+    if (store.allGames.length < 1) {
+        const noGamesEl = document.createElement("div");
+        noGamesEl.className = "no-games";
+        noGamesEl.innerText = "No games found. Create one!";
+        newLobbyList.appendChild(noGamesEl);
     }
 
     oldLobbyList.parentNode.replaceChild(newLobbyList, oldLobbyList);
@@ -178,6 +246,7 @@ const possibleColorOptions = ['red', 'green', 'blue', 'cyan', 'brown', 'pink', '
 const PAGES = {
     REGISTER: 'REGISTER',
     MAIN_MENU: 'MAIN_MENU',
+    SETTINGS: 'SETTINGS',
     LOBBY: 'LOBBY',
     GAME: 'GAME',
 }
@@ -355,6 +424,10 @@ const store = {
     registerForm: {
         error: '',
         pickedColor: null,
+    },
+    settingsForm: {
+        pickedColor: null,
+        error: '',
     },
     allGames: [],
     currentGameId: null,
