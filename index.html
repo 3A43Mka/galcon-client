@@ -83,10 +83,13 @@
         <div class="canvas-container">
             <div class="win-screen">
                 YOU WON!
+
+                <button class="game-end-return-to-main">Return to main menu</button>
             </div>
             <div class="lose-screen">
                 <div class="lose-screen-title">YOU LOST</div>
                 <div class="lose-screen-winner"></div>
+                <button class="game-end-return-to-main">Return to main menu</button>
             </div>
             <canvas id="canvas"></canvas>
         </div>
@@ -100,7 +103,7 @@
 
 
 <script src="./socket.io.js"></script>
-<script src="index.js"></script>
+<script type="module" src="index.js"></script>
 
 
 </body>

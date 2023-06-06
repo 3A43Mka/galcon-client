@@ -1,4 +1,91 @@
+import colors from "./colors";
 
+const drawUtils = {
+    drawBackground(color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    },
+    drawCircle(x, y, radius, fill, stroke, strokeWidth) {
+        ctx.beginPath()
+        ctx.arc(x, y, radius, 0, 2 * Math.PI, false)
+        if (fill) {
+            ctx.fillStyle = fill
+            ctx.fill()
+        }
+        if (stroke) {
+            ctx.lineWidth = strokeWidth
+            ctx.strokeStyle = stroke
+            ctx.stroke()
+        }
+    },
+    drawTextInCenter(msg, x, y, color, size) {
+        ctx.fillStyle = color;
+        ctx.font = `${size} Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(msg, x, y);
+    }
+}
+
+const utils = {
+    oMousePos(canvas, evt) {
+        var ClientRect = canvas.getBoundingClientRect();
+        return {
+            x: Math.round(evt.clientX - ClientRect.left),
+            y: Math.round(evt.clientY - ClientRect.top)
+        }
+    },
+    getPositionAlongTheLine(x1, y1, x2, y2, percentage) {
+        console.log("getPositionAlongTheLine ", x1, y1, x2, y2, percentage);
+        const x = x1 * (1.0 - percentage) + x2 * percentage;
+        const y = y1 * (1.0 - percentage) + y2 * percentage;
+        return {x, y};
+    }
+
+}
+
+const possibleColorOptions = ['red', 'green', 'blue', 'cyan', 'brown', 'pink', 'yellow', ]
+
+const PAGES = {
+    REGISTER: 'REGISTER',
+    MAIN_MENU: 'MAIN_MENU',
+    SETTINGS: 'SETTINGS',
+    LOBBY: 'LOBBY',
+    GAME: 'GAME',
+}
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const store = {
+    lastGameState: null,
+    playerId: null,
+    selectedPlanetId: null,
+    currentFlights: [],
+    lastUserCreated: null,
+    currentPage: PAGES.REGISTER,
+    registerForm: {
+        error: '',
+        pickedColor: null,
+    },
+    settingsForm: {
+        pickedColor: null,
+        error: '',
+    },
+    allGames: [],
+    currentGameId: null,
+    currentLobby: null,
+    currentLobbyPlayers: [],
+    lastGameWinner: null,
+};
+
+const socket = io("http://localhost:3000");
+window.secretSocket = socket;
+addCanvasEventListeners();
+addPagesEventListeners();
+updateNavigation();
+renderColorOptions();
+requestAnimationFrame(drawGameMapOnCanvas);
 
 function updateNavigation() {
     let allPages = document.querySelectorAll(".page");
@@ -78,6 +165,8 @@ function addPagesEventListeners() {
     settingsBack.addEventListener("click", handleGoBackToMain);
     const settingsSave = document.querySelector("#settings-save");
     settingsSave.addEventListener("click", handleSaveSettings);
+    const returnToMainMenuButtons = document.querySelectorAll(".game-end-return-to-main");
+    returnToMainMenuButtons.forEach((button) => button.addEventListener("click", initiateReset));
 }
 
 function renderColorOptions() {
@@ -133,7 +222,9 @@ function renderListOfGames() {
     const newLobbyList = document.createElement("div");
     newLobbyList.className = "lobby-list";
 
-    for (let game of store.allGames) {
+    const gamesToDisplay = store.allGames.filter(g => !g.isStarted);
+
+    for (let game of gamesToDisplay) {
         const gameItem = document.createElement("div");
         gameItem.className = "lobby-item";
         gameItem.innerText = `${game.id} (${game.usersAmount} players)`;
@@ -143,7 +234,7 @@ function renderListOfGames() {
         newLobbyList.appendChild(gameItem);
     }
 
-    if (store.allGames.length < 1) {
+    if (gamesToDisplay < 1) {
         const noGamesEl = document.createElement("div");
         noGamesEl.className = "no-games";
         noGamesEl.innerText = "No games found. Create one!";
@@ -241,210 +332,11 @@ function renderPlayerGreeting() {
     playerColor.style.setProperty("background-color", store.lastUserCreated.color);
 }
 
-const possibleColorOptions = ['red', 'green', 'blue', 'cyan', 'brown', 'pink', 'yellow', ]
-
-const PAGES = {
-    REGISTER: 'REGISTER',
-    MAIN_MENU: 'MAIN_MENU',
-    SETTINGS: 'SETTINGS',
-    LOBBY: 'LOBBY',
-    GAME: 'GAME',
-}
-
-//// canvas game stuff:
-
-const socket = io("http://localhost:3000");
-
-window.secretSocket = socket;
-
-const mockLastGameData = {
-    "id": "8586b2f7-8e39-4e4f-97c1-4ac61ecaad5c",
-    "players": [
-        {
-            "name": "Shrek",
-            "color": "green",
-            "id": "nug0RW9tFWy-FohyAAAF",
-            "isHost": true
-        },
-        {
-            "name": "me",
-            "color": "blue",
-            "id": "FXt92dVz9UvKl3hPAAAH",
-            "isHost": false
-        }
-    ],
-    "map": {
-        "w": 500,
-        "h": 200,
-        "planetArray": [
-            {
-                "id": 0,
-                "owner": {
-                    "name": "Shrek",
-                    "color": "green",
-                    "id": "nug0RW9tFWy-FohyAAAF",
-                    "isHost": true
-                },
-                "coords": {
-                    "x": 74.80785069456772,
-                    "y": 32.69527808319023
-                },
-                "radius": 9,
-                "fleet": 28,
-                "fleetGenSpeed": 18
-            },
-            {
-                "id": 1,
-                "owner": {
-                    "name": "me",
-                    "color": "blue",
-                    "id": "FXt92dVz9UvKl3hPAAAH",
-                    "isHost": false
-                },
-                "coords": {
-                    "x": 227.70676860934591,
-                    "y": 109.35450006904611
-                },
-                "radius": 9,
-                "fleet": 28,
-                "fleetGenSpeed": 18
-            },
-            {
-                "id": 2,
-                "owner": null,
-                "coords": {
-                    "x": 229.76714132776178,
-                    "y": 152.01181094780375
-                },
-                "radius": 23,
-                "fleet": 37,
-                "fleetGenSpeed": 46
-            },
-            {
-                "id": 3,
-                "owner": null,
-                "coords": {
-                    "x": 112.48928690092882,
-                    "y": 126.49078763919213
-                },
-                "radius": 6,
-                "fleet": 27,
-                "fleetGenSpeed": 12
-            },
-            {
-                "id": 4,
-                "owner": null,
-                "coords": {
-                    "x": 54.303954892138954,
-                    "y": 112.73347276096992
-                },
-                "radius": 16,
-                "fleet": 40,
-                "fleetGenSpeed": 32
-            },
-            {
-                "id": 5,
-                "owner": null,
-                "coords": {
-                    "x": 140.31611423124536,
-                    "y": 33.00484088436863
-                },
-                "radius": 12,
-                "fleet": 16,
-                "fleetGenSpeed": 24
-            },
-            {
-                "id": 6,
-                "owner": null,
-                "coords": {
-                    "x": 296.39769408554355,
-                    "y": 95.39056999882409
-                },
-                "radius": 4,
-                "fleet": 46,
-                "fleetGenSpeed": 8
-            },
-            {
-                "id": 7,
-                "owner": null,
-                "coords": {
-                    "x": 279.36042149160875,
-                    "y": 30.882574791974182
-                },
-                "radius": 23,
-                "fleet": 19,
-                "fleetGenSpeed": 46
-            },
-            {
-                "id": 8,
-                "owner": null,
-                "coords": {
-                    "x": 50.259282195216315,
-                    "y": 17.30919708763799
-                },
-                "radius": 9,
-                "fleet": 6,
-                "fleetGenSpeed": 18
-            },
-            {
-                "id": 9,
-                "owner": null,
-                "coords": {
-                    "x": 392.725757924619,
-                    "y": 85.23966752656015
-                },
-                "radius": 14,
-                "fleet": 35,
-                "fleetGenSpeed": 28
-            }
-        ]
-    }
-};
-
-const mockFlightData = {
-    "sender": "5Mr7RhzKYswH-ug_AAAH",
-    "unitsAmount": 1157,
-    "timeToReachInSec": 6.372361592587368,
-    "sourcePlanetId": 1,
-    "destinationPlanetId": 3
-}
-
-// some initial setup
-
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-const store = {
-    lastGameState: mockLastGameData,
-    playerId: null,
-    selectedPlanetId: null,
-    currentFlights: [],
-    lastUserCreated: null,
-    currentPage: PAGES.REGISTER,
-    registerForm: {
-        error: '',
-        pickedColor: null,
-    },
-    settingsForm: {
-        pickedColor: null,
-        error: '',
-    },
-    allGames: [],
-    currentGameId: null,
-    currentLobby: null,
-    currentLobbyPlayers: [],
-    lastGameWinner: null,
-};
-
-store.lastGameState = null;
-
-addCanvasEventListeners();
-
-//
-
 socket.on("connect", () => {
     console.log("Connected to the server and was assigned an id of ", socket.id);
     store.playerId = socket.id;
+    setupLobbyUpdateRunner();
+    tryLoadingProfileData();
 });
 
 socket.on('GAME_CREATED', () => {
@@ -546,12 +438,51 @@ function getLobbyList() {
         console.log("Here are all lobbies", lobbyList);
         store.allGames = lobbyList;
         renderListOfGames();
-
     });
+}
+
+function setupLobbyUpdateRunner() {
+    window.gamesListUpdateRunner = setInterval(() => {
+        if (store.currentPage === PAGES.MAIN_MENU) {
+            getLobbyList();
+        }
+    }, 1000);
 }
 
 function addCanvasEventListeners() {
     canvas.addEventListener('click', handleCanvasClick);
+}
+
+function initiateReset() {
+    localStorage.setItem("profileSaveData", JSON.stringify(store.lastUserCreated));
+    location.reload();
+}
+
+function tryLoadingProfileData() {
+    let profileData = null;
+    try {
+        const gotData = JSON.parse(localStorage.getItem("profileSaveData"));
+        profileData = {
+            name: gotData.name,
+            color: gotData.color,
+        };
+    } catch (e) {
+
+    }
+    localStorage.removeItem("profileSaveData");
+    if (!profileData) {
+        return;
+    }
+    autoLogIn(profileData);
+}
+
+function autoLogIn(profileData) {
+    const nameInput = document.querySelector("#nickname-input");
+    nameInput.value = profileData.name;
+    const colorOptionToPick = document.querySelector(`.color-option-item[data-color="${profileData.color}"]`);
+    colorOptionToPick.click();
+    const registerButton = document.querySelector("#register-button");
+    registerButton.click();
 }
 
 function registerOngoingFlight(data) {
@@ -612,62 +543,6 @@ function handleCanvasClick(e) {
     }
 }
 
-const drawUtils = {
-    drawBackground(color) {
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    },
-    drawCircle(x, y, radius, fill, stroke, strokeWidth) {
-        ctx.beginPath()
-        ctx.arc(x, y, radius, 0, 2 * Math.PI, false)
-        if (fill) {
-            ctx.fillStyle = fill
-            ctx.fill()
-        }
-        if (stroke) {
-            ctx.lineWidth = strokeWidth
-            ctx.strokeStyle = stroke
-            ctx.stroke()
-        }
-    },
-    drawTextInCenter(msg, x, y, color, size) {
-        ctx.fillStyle = color;
-        ctx.font = `${size} Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(msg, x, y);
-    }
-}
-
-const utils = {
-    oMousePos(canvas, evt) {
-        var ClientRect = canvas.getBoundingClientRect();
-        return {
-            x: Math.round(evt.clientX - ClientRect.left),
-            y: Math.round(evt.clientY - ClientRect.top)
-        }
-    },
-    getPositionAlongTheLine(x1, y1, x2, y2, percentage) {
-        console.log("getPositionAlongTheLine ", x1, y1, x2, y2, percentage);
-        const x = x1 * (1.0 - percentage) + x2 * percentage;
-        const y = y1 * (1.0 - percentage) + y2 * percentage;
-        return {x, y};
-    }
-
-}
-
-const colors = {
-    mapBackground: '#000421',
-    ownColor: '#3950f1',
-    ownFlightColor: '#8290f8',
-    rivalColor: '#ff3232',
-    rivalFlightColor: '#ef7b7b',
-    neutralColor: '#a2a2a2',
-    transparent: 'transparent',
-    selectedColor: '#ffecad',
-    white: 'white',
-}
-
 function drawAllPlanets() {
     const planetsData = store.lastGameState.map.planetArray;
     for (let planet of planetsData) {
@@ -703,10 +578,6 @@ function drawAllFlights() {
     }
 }
 
-// setInterval(drawGameMapOnCanvas, 100);
-
-requestAnimationFrame(drawGameMapOnCanvas)
-
 function drawGameMapOnCanvas() {
     if (store.lastGameState) {
 
@@ -716,7 +587,3 @@ function drawGameMapOnCanvas() {
     }
     requestAnimationFrame(drawGameMapOnCanvas)
 }
-
-addPagesEventListeners();
-updateNavigation();
-renderColorOptions();
