@@ -1,6 +1,7 @@
 import colors from "./colors";
 import possibleColorOptions from "./possibleColorOptions";
 import PAGES from "./pages";
+import sounds from "./sounds";
 
 const drawUtils = {
     drawBackground(color) {
@@ -302,10 +303,12 @@ function renderGameEnded() {
         return;
     }
     if (store.lastGameWinner.id === store.playerId) {
+        playAudio(sounds.WIN);
         loseScreen.classList.add("d-none");
         winScreen.classList.remove("d-none");
 
     } else {
+        playAudio(sounds.LOSE);
         loseScreen.classList.remove("d-none");
         winScreen.classList.add("d-none");
         const winnerEl = document.querySelector(".lose-screen-winner");
@@ -336,6 +339,7 @@ socket.on('GAME_CREATED', () => {
 
 socket.on('PLAYER_JOINED', (player) => {
     console.log("Player joined: ", player);
+    playAudio(sounds.PLAYER_JOINED);
     store.currentLobbyPlayers.push(player);
     renderLobby();
 });
@@ -459,21 +463,25 @@ function animateCountDown() {
         slide.classList.remove("countdown-slide--animated");
         slide.classList.add("d-none");
     })
+    playAudio(sounds.COUNT_SLIDE);
     countdownScreen.classList.remove("d-none");
     slide1.classList.remove("d-none");
     slide1.classList.add("countdown-slide--animated");
     const delay = 700;
     setTimeout(() => {
+        playAudio(sounds.COUNT_SLIDE);
         slide1.classList.add("d-none");
         slide2.classList.remove("d-none");
         slide2.classList.add("countdown-slide--animated");
     }, delay);
     setTimeout(() => {
+        playAudio(sounds.COUNT_SLIDE);
         slide2.classList.add("d-none");
         slide3.classList.remove("d-none");
         slide3.classList.add("countdown-slide--animated");
     }, delay*2);
     setTimeout(() => {
+        playAudio(sounds.GAME_START);
         slide3.classList.add("d-none");
         slide4.classList.remove("d-none");
         slide4.classList.add("countdown-slide--animated");
@@ -558,6 +566,7 @@ function handleCanvasClick(e) {
             console.log("Clicked on a planet id = ", planet.id);
             if (!store.selectedPlanetId && planet.owner?.id === store.playerId) {
                 store.selectedPlanetId = planet.id;
+                playAudio(sounds.PLANET_SELECT);
             } else if (store.selectedPlanetId === planet.id) {
                 store.selectedPlanetId = null;
             } else {
@@ -602,6 +611,12 @@ function drawAllFlights() {
         drawUtils.drawCircle(flight.x1, flight.y1, 1, colors.white, colors.transparent, 0);
         drawUtils.drawCircle(flight.x2, flight.y2, 1, colors.white, colors.transparent, 0);
     }
+}
+
+function playAudio(src) {
+    const audioBox = document.querySelector(".audio-box");
+    const newAudio = new Audio(src);
+    newAudio.play();
 }
 
 function drawGameMapOnCanvas() {
