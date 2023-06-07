@@ -38,7 +38,6 @@ const utils = {
         }
     },
     getPositionAlongTheLine(x1, y1, x2, y2, percentage) {
-        console.log("getPositionAlongTheLine ", x1, y1, x2, y2, percentage);
         const x = x1 * (1.0 - percentage) + x2 * percentage;
         const y = y1 * (1.0 - percentage) + y2 * percentage;
         return {x, y};
@@ -326,26 +325,22 @@ function renderPlayerGreeting() {
 }
 
 socket.on("connect", () => {
-    console.log("Connected to the server and was assigned an id of ", socket.id);
     store.playerId = socket.id;
     setupLobbyUpdateRunner();
     tryLoadingProfileData();
 });
 
 socket.on('GAME_CREATED', () => {
-    console.log("Hey, I hear a new game was created, let me get the lobby list...");
     getLobbyList();
 })
 
 socket.on('PLAYER_JOINED', (player) => {
-    console.log("Player joined: ", player);
     playAudio(sounds.PLAYER_JOINED);
     store.currentLobbyPlayers.push(player);
     renderLobby();
 });
 
 socket.on('GAME_STARTED', (gameDetails) => {
-    console.log("Game Started: ", gameDetails);
     store.lastGameState = gameDetails;
     store.currentPage = PAGES.GAME;
     renderGameScreen();
@@ -357,18 +352,15 @@ socket.on('GAME_STARTED', (gameDetails) => {
 });
 
 socket.on('SEND_UNITS', (sendUnitsDetails) => {
-    console.log("Units were sent: ", sendUnitsDetails);
     registerOngoingFlight(sendUnitsDetails);
 });
 
 socket.on('GAME_END', (winner, allPlayers) => {
-    console.log("The game ended, winner: ", winner, "allPlayers: ", allPlayers);
     store.lastGameWinner = winner;
     renderGameEnded();
 });
 
 socket.on('SYNC', (gameState) => {
-    console.log("gameState is:", gameState);
     store.lastGameState = gameState;
 });
 
@@ -382,11 +374,9 @@ function createMyUser(name, color) {
 
 function createNewGame() {
     if (!store.lastUserCreated) {
-        console.log("You have to create a user first!");
         return;
     }
     socket.emit('CREATE_NEW_GAME', store.lastUserCreated, (gameId) => {
-        console.log("I have just created a game: ", gameId);
         store.currentGameId = gameId;
 
         socket.emit('GET_LOBBY_LIST', (lobbyList) => {
@@ -406,7 +396,6 @@ function joinGame(gameId) {
         return;
     }
     socket.emit('JOIN_GAME', store.lastUserCreated, gameId, (game) => {
-        console.log("I have just joined a game: ", game);
         store.currentGameId = gameId;
         store.currentLobby = game;
         store.currentLobbyPlayers = game.players;
@@ -419,18 +408,15 @@ function joinGame(gameId) {
 function startGame(gameId) {
     if (store.currentLobbyPlayers.length > 1) {
         socket.emit('START_GAME', gameId);
-        console.log("I am initiating a start of the game: ", gameId);
     }
 }
 
 function sendUnits(gameId, sourcePlanetId, destinationPlanetId) {
     socket.emit('SEND_UNITS', gameId, sourcePlanetId, destinationPlanetId);
-    console.log("I am initiating sending units: ", gameId, sourcePlanetId, destinationPlanetId);
 }
 
 function getLobbyList() {
     socket.emit('GET_LOBBY_LIST', (lobbyList) => {
-        console.log("Here are all lobbies", lobbyList);
         store.allGames = lobbyList;
         renderListOfGames();
     });
@@ -539,22 +525,15 @@ function registerOngoingFlight(data) {
         fleetOwner: data.sender,
         fleetRadius: fleetRadius,
     }
-
-    console.log("Flight added: ", flightData);
-
     store.currentFlights.push(flightData);
-    console.log("Added the flight to store:", store);
-
     // setting timer to delete data from array
     setTimeout(() => {
-        console.log("Erasing the filght: ", flightData);
         store.currentFlights = store.currentFlights.filter((f) => f !== flightData);
     }, data.timeToReachInSec * 1000);
 }
 
 function handleCanvasClick(e) {
     const mouse = utils.oMousePos(canvas, e);
-    console.log(mouse);
     const planetsData = store.lastGameState.map.planetArray;
     for (let planet of planetsData) {
         const clickHitCircle =
@@ -563,7 +542,6 @@ function handleCanvasClick(e) {
                 Math.pow((mouse.y - planet.coords.y), 2)
             ) < planet.radius;
         if (clickHitCircle) {
-            console.log("Clicked on a planet id = ", planet.id);
             if (!store.selectedPlanetId && planet.owner?.id === store.playerId) {
                 store.selectedPlanetId = planet.id;
                 playAudio(sounds.PLANET_SELECT);
@@ -597,16 +575,13 @@ function drawAllPlanets() {
 
 function drawAllFlights() {
     for (let flight of store.currentFlights) {
-        // console.log("drawAllFlights()2")
         const fleetOwner = store.lastGameState.players.find(p => p.id === flight.fleetOwner)
         const flightColor = fleetOwner.color;
         const now = new Date();
         const q = Math.abs(now - flight.startTime);
         const d = Math.abs(flight.endTime - flight.startTime);
-        // console.log("q: ", q, " d: ", d);
         const percent = q / d;
         const fleetPos = utils.getPositionAlongTheLine(flight.x1, flight.y1, flight.x2, flight.y2, percent);
-        // console.log("Going to draw fleet: ", fleetPos.x, fleetPos.y, 5, flightColor, colors.transparent, 0);
         drawUtils.drawCircle(fleetPos.x, fleetPos.y, flight.fleetRadius, flightColor, colors.transparent, 0);
         drawUtils.drawCircle(flight.x1, flight.y1, 1, colors.white, colors.transparent, 0);
         drawUtils.drawCircle(flight.x2, flight.y2, 1, colors.white, colors.transparent, 0);
